@@ -108,7 +108,7 @@ const Login = () => {
     </Button>
     <Button
     varient="solid"
-    colorScheme="blue"
+    colorScheme="red"
     width="100%"
     onClick={() => {
         setEmail("guest123@example.com");

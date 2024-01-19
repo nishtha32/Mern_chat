@@ -20,7 +20,7 @@ import { Avatar } from "@chakra-ui/avatar";
 import React, { useState } from 'react'
 import { BellIcon, ChevronDownIcon } from '@chakra-ui/icons';
 import { ChatState } from '../../Context/ChatProvider';
-import ProfileModel from './ProfileModel';
+import ProfileModal from './ProfileModel';
 import { useHistory } from 'react-router-dom';
 import { useDisclosure } from '@chakra-ui/hooks';
 import { useToast } from "@chakra-ui/toast";
@@ -29,6 +29,7 @@ import ChatLoading from '../ChatLoading';
 import UserListItem from '../UserAvatar/UserListItem';
 import { Input } from "@chakra-ui/input";
 import { Box, Text } from "@chakra-ui/layout";
+import { getSender } from '../../config/ChatLogics';
 
 
 
@@ -39,7 +40,7 @@ const SideDrawer = () => {
     const [loading, setLoading] = useState(false);
     const [loadingChat, setLoadingChat] = useState("");
 
-    const { user, setSelectedChat, chats, setChats} = ChatState();
+    const { user, setSelectedChat, chats, setChats, notification, setNotification } = ChatState();
     const history = useHistory();
     const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -177,7 +178,7 @@ const SideDrawer = () => {
 
                 <Box display="flex" alignItems="center">
                     {/* Add your image source in the src attribute */}
-                    <Image src="https://i.pinimg.com/originals/9a/c7/7e/9ac77ed57a967f10a8ff8c6dcd6e0308.png" alt="Logo" boxSize="40px" objectFit="cover" borderRadius="full" mr="0" />
+                    <Image src="https://cdn3.vectorstock.com/i/1000x1000/36/97/approved-chat-app-icon-vector-28873697.jpg" alt="Logo" boxSize="40px" objectFit="cover" borderRadius="full" mr="0" />
 
                     <Text fontSize="2xl" fontFamily="WorkSans" color="black" ml="0">My Chat</Text>
                 </Box>
@@ -187,16 +188,31 @@ const SideDrawer = () => {
                         <MenuButton p={1}>
                             <BellIcon color="black" fontSize="2xl" m={1} />
                         </MenuButton>
-                        {/* <MenuList></MenuList> */}
+                        <MenuList color="black" p={3}>
+                            {!notification.length && "No New Messages"}
+                            {notification.map((notif) => (
+                                <MenuItem key={notif._id} color="blue" 
+                                    onClick={() => {
+                                        setSelectedChat(notif.chat);
+                                        setNotification(
+                                            notification.filter((n) => n !== notif));
+                                    }}
+                                >
+                                    {notif.chat.isGroupChat
+                                        ? `New Message in ${notif.chat.chatName}`
+                                        : `New Message from ${getSender(user,notif.chat.users)}`}
+                                </MenuItem>
+                            ))}
+                        </MenuList>
                     </Menu>
                     <Menu>
                         <MenuButton as={Button} rightIcon={<ChevronDownIcon/>} >
                            <Avatar size="sm" cursor="pointer" name={user.name} src={user.pic}/>
                         </MenuButton>
                         <MenuList>
-                            <ProfileModel user={user}>
+                            <ProfileModal user={user}>
                                 <MenuItem color="Black">My Profile</MenuItem>
-                            </ProfileModel>
+                            </ProfileModal>
                             <MenuDivider/>
                             <MenuItem onClick={logoutHandler} color="Black">Logout</MenuItem>
                         </MenuList>

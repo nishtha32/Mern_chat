@@ -11,11 +11,14 @@ import { AddIcon } from '@chakra-ui/icons';
 import { getSender } from '../config/ChatLogics';
 import { getProfilePic } from '../config/ChatLogics';
 import { Image } from '@chakra-ui/image';
+import GroupChatModal from './miscellaneous/GroupChatModal';
 
-const MyChats = () => {
+
+const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
   const toast = useToast();
+  const [selectedChatId, setSelectedChatId] = useState(null);
 
   const fetchChats = async () => {
     try {
@@ -25,6 +28,7 @@ const MyChats = () => {
         },
       };
       const { data } = await axios.get("/api/chat", config);
+      console.log(data);
       setChats(data);
     } catch (error) {
       toast({
@@ -37,11 +41,28 @@ const MyChats = () => {
       });
     }
   };
+  const deselectChat = () => {
+    setSelectedChat(null);
+    setSelectedChatId(null);
+};
 
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
-  }, []);
+    const handleKeyPress = (event) => {
+      if (event.key === 'Escape') {
+        deselectChat();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+};
+  }, [fetchAgain]);
+
 
   const filteredChats = chats.filter(chat => {
     return chat.users.some(user => user._id === loggedUser?._id);
@@ -54,28 +75,30 @@ const MyChats = () => {
       // alignItems="center"
       p={2}
       bg="blue.900"
-      // w={{ base: "100%", md: "3%" }}
-      w="25%"
+      w={{ base: "100%", md: "30%" }}
+      // w="25%"
       borderRadius="lg"
       borderWidth="1px"
     >
       <Box
         pd={5}
         px={1}
-        fontSize={{ base: "10px", md: "20px" }}
+        fontSize={{ base: "30px", md: "20px" }}
         fontFamily="Work Sans"
         display="flex"
         justifyContent="space-between"
         alignItems="center"
       >
         My Chats
-        <Button
-          display="flex"
-          fontSize={{ base: "15px", md: "10px", lg: "15px" }}
-          rightIcon={<AddIcon />}
-        >
-          New Group Chat
-        </Button>
+        <GroupChatModal>
+          <Button
+            display="flex"
+            fontSize={{ base: "15px", md: "10px", lg: "15px" }}
+            rightIcon={<AddIcon />}
+          >
+            New Group Chat
+          </Button>
+        </GroupChatModal>
       </Box>
 
       <Box
@@ -92,8 +115,11 @@ const MyChats = () => {
           <Stack overflowY="scroll">
             {filteredChats.map(chat => (
               <Box
-                onClick={() => setSelectedChat(chat)}
-                cursor="pointer"
+                onClick={() => {
+                  setSelectedChatId(chat._id);
+                  setSelectedChat(chat);
+                  console.log(chat)
+}}                cursor="pointer"
                 bg={selectedChat === chat ? "black" : "blue.700"}
                 color={selectedChat === chat ? "white" : "black"}
                 px={5}
